@@ -1,0 +1,108 @@
+---
+- name: local-docker-registry
+  hosts: all
+  become: true
+  tasks:
+    - name: Configuração do yum e instalação de utilitários e plugins
+      block:
+        - name: Configura  paramêtros do yum
+          ansible.builtin.blockinfile:
+            path: /etc/yum.conf
+            block: |
+              fastestmirror=1
+              max_parallel_downloads=15
+
+        - name: Instalação de utilitários e plugins do yum
+          ansible.builtin.yum:
+            name: 
+              - yum-utils
+              - dnf-plugins-core
+              - man
+              - man-pages
+              - man-db
+            state: present 
+           
+    - name: Instala e configuração do GIT
+      block:
+        - name: Instala o GIT
+          ansible.builtin.yum:
+            name: git
+            state: present
+
+        - name: Configura usuário, email e nome da branch no GIT
+          ansible.builtin.shell: |
+            git config --global user.name 'vagrant'
+            git config --global user.email 'vagrant@teste.com'
+            git config --global init.defaultBranch 'main'
+
+    - name: Habilita os repositórios do Docker
+      ansible.builtin.yum_repository:
+        name: docker-ce-stable
+        description: Docker CE 
+        baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
+        enabled: yes
+        gpgcheck: yes
+        gpgkey: https://download.docker.com/linux/centos/gpg
+        state: present
+      notify: 'repositório habilitado'
+
+    - name: Força os handlers a executarem neste ponto
+      ansible.builtin.meta: flush_handlers
+
+    - name: Transforma o host em docker-registry
+      block:
+        - name: Instala o docker-sdk
+          ansible.builtin.pip:
+            name: docker
+            state: present
+        
+        - name: Cria o diretório do registry
+          ansible.builtin.file:
+            path: /home/vagrant/registry
+            state: directory
+
+        - name: Cria o container do registry
+          community.docker.docker_container:
+            name: registry
+            image: docker.io/registry:latest
+            ports: 
+              - "5000:5000"
+            restart: yes
+            restart_policy: always
+            volumes:
+              - "/home/vagrant/registry:/var/lib/registry"
+  
+  handlers:
+    - name: Instala o Docker, configura o usuário e inicia o serviço
+      block:
+        - name: Instalação do Docker
+          ansible.builtin.yum:
+            name:
+              - docker-ce
+              - docker-ce-cli
+              - docker-compose-plugin
+              - containerd.io
+            state: present
+          listen: 'repositório habilitado'
+        
+        - name: Inicia o serviço do Docker
+          ansible.builtin.systemd:
+            name: docker.service
+            state: started
+            enabled: yes
+          listen: 'repositório habilitado'
+
+        - name: Adiciona o usuário vagrant ao grupo docker
+          ansible.builtin.user:
+            name: vagrant
+            append: yes
+            groups: docker
+          listen: 'repositório habilitado'
+          
+      
+
+    
+
+          
+        
+...
