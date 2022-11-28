@@ -1,0 +1,3 @@
+*.yaml linguist-language=YAML
+*.cfg linguist-language=INI
+Vagrantfile linguist-language=Ruby
