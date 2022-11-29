@@ -14,6 +14,13 @@ Escrevi uma playbook de arquivo único ao invés de usar o esquema de roles, a m
 * Instala o Docker-SDK(necessário para usar o módulo community.docker)
 * Cria o container do registry
 
+### Atenção
+Este projeto foi feito para fins de estudo, caso você decida implementar algo parecido em um ambiente
+de produção utilize o ansible-vault(ou algo parecido) para esconder os dados sensíveis
+do projeto(como credenciais de usuário, por exemplo).
+Você pode ler mais sobre o ansible-vault [aqui](https://docs.ansible.com/ansible/latest/vault_guide/index.html) e caso você decida utiliza-lo em conjunto com o Vagrant terá que adicionar
+algumas opções no seu Vagrantfile, você pode ler mais sobre opções relacionadas ao Ansible em conjunto com o Vagrant [aqui](https://developer.hashicorp.com/vagrant/docs/provisioning/ansible_common)
+
 # Executando
 ```
 vagrant up
